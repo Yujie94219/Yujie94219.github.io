@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+  
+  <title>
+    
+    Hexo
+  </title>
+  
+    <link rel="shortcut icon" href="/favicon.ico">
+    
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<script src="/js/pace.min.js"></script>
+
+<meta name="generator" content="Hexo 5.4.0"></head>
+
+<body>
+  <main class="content">
+    <section class="jumbotron">
+  <div class="video">
+    
+    <div class="video-frame">
+      <img src="/images/ocean/overlay-hero.png" alt="Decorative image frame">
+    </div>
+    
+    <div class="video-media">
+      <video playsinline="" autoplay="" loop="" muted="" data-autoplay="" poster="/images/ocean/ocean.png"
+        x5-video-player-type="h5">
+        <source src="/images/ocean/ocean.mp4" type="video/mp4">
+        <source src="/images/ocean/ocean.ogv" type="video/ogg">
+        <source src="/images/ocean/ocean.webm" type="video/webm">
+        <p>Your user agent does not support the HTML5 Video element.</p>
+      </video>
+      <div class="video-overlay"></div>
+    </div>
+    <div class="video-inner text-center text-white">
+      <h1><a href="/">Hexo</a></h1>
+      <p></p>
+      <div><img src="/images/hexo-inverted.svg" class="brand" alt="Hexo"></div>
+    </div>
+    <div class="video-learn-more">
+      <a class="anchor" href="#landingpage"><i class="fe fe-mouse"></i></a>
+    </div>
+  </div>
+</section>
+<div id="landingpage">
+  <section class="outer">
+  <article class="articles">
+    
+    <h1 class="page-type-title"></h1>
+    
+    
+    <article id="post-Kafka常用命令" class="article article-type-post" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+
+    
+    <div class="article-meta">
+      <a href="/2021/11/28/Kafka%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/" class="article-date">
+  <time datetime="2021-11-28T10:00:35.419Z" itemprop="datePublished">2021-11-28</time>
+</a>
+      
+    </div>
+    
+
+    
+
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+        
+      
+      
+      <h3 id="Kafka常用命令"><a href="#Kafka常用命令" class="headerlink" title="Kafka常用命令"></a>Kafka常用命令</h3><h4 id="节点命令"><a href="#节点命令" class="headerlink" title="节点命令"></a>节点命令</h4><ul>
+<li><p>启动：bin/kafka-server-start.sh config/server.properties</p>
+</li>
+<li><p>停止：bin/kafka-server-stop.sh</p>
+</li>
+<li><p>消费者压测工具：bin/kafka-consumer-perf-test.sh –messages 100000 –message-size 500 –broker-list 172.21.36.29:9093,172.21.36.180:9092,172.21.36.30:9094 –threads 20 –num-fetch-threads 20 –batch-size 500 –consumer.config ./config/consumer.properties –topic test11</p>
+</li>
+<li><p>生产者压测工具：bin/kafka-producer-perf-test.sh –num-records 1000 –record-size 5 –throughput 10000 –producer-props bootstrap.servers=172.21.36.29:9093,172.21.36.180:9092,172.21.36.30:9094 –topic test</p>
+</li>
+<li><p>最简单版生产消息：bin/kafka-console-producer.sh -broker-list 192.168.130.128:9092 -topic test</p>
+<p>  如果要发送key：bin/kafka-console-producer.sh –broker-list 192.168.130.128:9092 -topic test –property parse.key=true –property key.separator=”:”</p>
+</li>
+<li><p>新消费者消费消息：bin/kafka-console-consumer.sh –bootstrap-server 192.168.130.128:9092,192.168.130.128:9093 –topic test –new-consumer –from-beginning –consumer.config config/consumer.properties</p>
+<p> 如果要看key：bin/kafka-console-consumer.sh –bootstrap-server 192.168.130.128:9092,192.168.130.128:9093 –topic test –new-consumer –from-beginning –consumer.config config/consumer.properties –property print.key=true –property key.separator=”:”</p>
+</li>
+</ul>
+<h4 id="Topic命令"><a href="#Topic命令" class="headerlink" title="Topic命令"></a>Topic命令</h4><ul>
+<li><p>新建topic：bin/kafka-topics.sh -create -zookeeper 192.168.130.128:2181 -replication-factor 2 -partitions 4 -topic test</p>
+</li>
+<li><p>查询指定topic的LogSize：bin/kafka-run-class.sh kafka.tools.GetOffsetShell –broker-list 192.168.130.128:9092 –topic test –time -1</p>
+</li>
+<li><p>分区工具三部曲：</p>
+<p>bin/kafka-reassign-partitions.sh –zookeeper 192.168.130.128:2181 –topics-to-move-json-file ./bin/topics-to-move.json –broker-list “2” –generate</p>
+<p>bin/kafka-reassign-partitions.sh –zookeeper 192.168.130.128:2181 –reassignment-json-file ./bin/reassignment.json –execute</p>
+<p>bin/kafka-reassign-partitions.sh –zookeeper 192.168.130.128:2181 –reassignment-json-file ./bin/reassignment.json –verify</p>
+</li>
+</ul>
+<h4 id="消费组命令"><a href="#消费组命令" class="headerlink" title="消费组命令"></a>消费组命令</h4><ul>
+<li><p>查询消费组消费进度（0.8）：bin/kafka-run-class.sh kafka.tools.ConsumerOffsetChecker –topic test1 –zookeeper 192.168.130.128:2181 –group offset-father</p>
+</li>
+<li><p>查询消费组消费进度：bin/kafka-consumer-groups.sh –new-consumer –bootstrap-server 192.168.130.128:9092,192.168.130.128:9093 –group offset-father –describe</p>
+</li>
+<li><p>自定义设置开始偏移量：/bin/kafka-consumer-groups.sh –bootstrap-server 192.168.130.128:9092 –group offset-father –topic test1 –execute –reset-offsets –to-earliest</p>
+</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://example.com/2021/11/28/Kafka%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/" data-id="ckwj39zij0000d4vg13zug5ew" class="article-share-link">
+        Share
+      </a>
+      
+    </footer>
+
+  </div>
+
+  
+
+  
+
+</article>
+    
+  </article>
+  
+
+  
+</section>
+</div>
+    <footer class="footer">
+  <div class="outer">
+    <div class="float-right">
+      <ul class="list-inline">
+  
+  <li><i class="fe fe-bar-chart"></i> <span id="busuanzi_value_site_pv"></span></li>
+  
+  <li><i class="fe fe-smile-alt"></i> <span id="busuanzi_value_site_uv"></span></li>
+  
+</ul>
+    </div>
+    <ul class="list-inline">
+      <li>Hexo &copy; 2021</li>
+      
+        <li>ZHWANGART</li>
+      
+      <li>Powered by <a href="http://hexo.io/" target="_blank">Hexo</a></li>
+      <li>theme  <a target="_blank" rel="noopener" href="https://github.com/zhwangart/hexo-theme-ocean">Ocean</a></li>
+    </ul>
+  </div>
+</footer>
+  </main>
+  <aside class="sidebar">
+    <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/hexo.svg" alt="Hexo"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">Home</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">Archives</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/gallery">Gallery</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">About</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link nav-item-search" title="Search">
+        <i class="fe fe-search"></i>
+        Search
+      </a>
+    </li>
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      <div class="totop" id="totop">
+  <i class="fe fe-rocket"></i>
+</div>
+    </li>
+    <li class="nav-item">
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="fe fe-feed"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+  </aside>
+  
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/jquery.justifiedGallery.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+<script src="/js/copybtn.js"></script>
+
+
+
+
+
+
+<script src="/js/ocean.js"></script>
+
+</body>
+
+</html>
