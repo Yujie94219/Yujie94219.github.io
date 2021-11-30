@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="format-detection" content="telephone=no"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black"><link rel="icon" href="/images/icons/favicon-16x16.png?v=2.6.2" type="image/png" sizes="16x16"><link rel="icon" href="/images/icons/favicon-32x32.png?v=2.6.2" type="image/png" sizes="32x32"><meta name="description" content="Kafka常用命令                           节点命令        启动：bin&#x2F;kafka-server-start.sh config&#x2F;server.properties  停止：bin&#x2F;kafka-server-stop.sh  消费者压测工具：bin&#x2F;kafka-consumer-perf-test.sh –message">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Kafka常用命令">
-<meta property="og:url" content="http://example.com/2021/11/30/Kafka/Kafka%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/index.html">
+<meta property="og:url" content="http://example.com/2021/11/30/Kafka%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/index.html">
 <meta property="og:site_name" content="Coding Heart">
 <meta property="og:description" content="Kafka常用命令                           节点命令        启动：bin&#x2F;kafka-server-start.sh config&#x2F;server.properties  停止：bin&#x2F;kafka-server-stop.sh  消费者压测工具：bin&#x2F;kafka-consumer-perf-test.sh –message">
 <meta property="og:locale" content="en_US">
@@ -9,7 +9,7 @@
 <meta property="article:modified_time" content="2021-11-30T15:11:26.672Z">
 <meta property="article:author" content="Yu Jie">
 <meta property="article:tag" content="Kafka">
-<meta name="twitter:card" content="summary"><title>Kafka常用命令 | Coding Heart</title><link ref="canonical" href="http://example.com/2021/11/30/Kafka/Kafka%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.12.1/css/all.min.css" type="text/css"><link rel="stylesheet" href="/css/index.css?v=2.6.2"><script>var Stun = window.Stun || {};
+<meta name="twitter:card" content="summary"><title>Kafka常用命令 | Coding Heart</title><link ref="canonical" href="http://example.com/2021/11/30/Kafka%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.12.1/css/all.min.css" type="text/css"><link rel="stylesheet" href="/css/index.css?v=2.6.2"><script>var Stun = window.Stun || {};
 var CONFIG = {
   root: '/',
   algolia: undefined,
@@ -34,10 +34,10 @@ var CONFIG = {
 };
 
 window.CONFIG = CONFIG;</script><meta name="generator" content="Hexo 5.4.0"></head><body><div class="container" id="container"><header class="header" id="header"><div class="header-inner"><nav class="header-nav header-nav--fixed"><div class="header-nav-inner"><div class="header-nav-menubtn"><i class="fas fa-bars"></i></div><div class="header-nav-menu"><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/"><span class="header-nav-menu-item__icon"><i class="fas fa-home"></i></span><span class="header-nav-menu-item__text">Home</span></a></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/archives/"><span class="header-nav-menu-item__icon"><i class="fas fa-folder-open"></i></span><span class="header-nav-menu-item__text">Archives</span></a></div></div><div class="header-nav-mode"><div class="mode"><div class="mode-track"><span class="mode-track-moon"></span><span class="mode-track-sun"></span></div><div class="mode-thumb"></div></div></div></div></nav><div class="header-banner"><div class="header-banner-info"><div class="header-banner-info__title">Coding Heart</div><div class="header-banner-info__subtitle"></div></div></div></div></header><main class="main" id="main"><div class="main-inner"><div class="content-wrap" id="content-wrap"><div class="content" id="content"><!-- Just used to judge whether it is an article page--><div id="is-post"></div><div class="post"><header class="post-header"><h1 class="post-title">Kafka常用命令</h1><div class="post-meta"><span class="post-meta-item post-meta-item--createtime"><span class="post-meta-item__icon"><i class="far fa-calendar-plus"></i></span><span class="post-meta-item__info">Created</span><span class="post-meta-item__value">2021-11-30</span></span><span class="post-meta-item post-meta-item--updatetime"><span class="post-meta-item__icon"><i class="far fa-calendar-check"></i></span><span class="post-meta-item__info">Updated</span><span class="post-meta-item__value">2021-11-30</span></span></div></header><div class="post-body">
-        <h3 id="Kafka常用命令"   >
+        <h3 id="Kafka常用命令">
           <a href="#Kafka常用命令" class="heading-link"><i class="fas fa-link"></i></a><a href="#Kafka常用命令" class="headerlink" title="Kafka常用命令"></a>Kafka常用命令</h3>
       
-        <h4 id="节点命令"   >
+        <h4 id="节点命令">
           <a href="#节点命令" class="heading-link"><i class="fas fa-link"></i></a><a href="#节点命令" class="headerlink" title="节点命令"></a>节点命令</h4>
       <ul>
 <li><p>启动：bin/kafka-server-start.sh config/server.properties</p>
@@ -56,7 +56,7 @@ window.CONFIG = CONFIG;</script><meta name="generator" content="Hexo 5.4.0"></he
 </li>
 </ul>
 
-        <h4 id="Topic命令"   >
+        <h4 id="Topic命令">
           <a href="#Topic命令" class="heading-link"><i class="fas fa-link"></i></a><a href="#Topic命令" class="headerlink" title="Topic命令"></a>Topic命令</h4>
       <ul>
 <li><p>新建topic：bin/kafka-topics.sh -create -zookeeper 192.168.130.128:2181 -replication-factor 2 -partitions 4 -topic test</p>
@@ -70,7 +70,7 @@ window.CONFIG = CONFIG;</script><meta name="generator" content="Hexo 5.4.0"></he
 </li>
 </ul>
 
-        <h4 id="消费组命令"   >
+        <h4 id="消费组命令">
           <a href="#消费组命令" class="heading-link"><i class="fas fa-link"></i></a><a href="#消费组命令" class="headerlink" title="消费组命令"></a>消费组命令</h4>
       <ul>
 <li><p>查询消费组消费进度（0.8）：bin/kafka-run-class.sh kafka.tools.ConsumerOffsetChecker –topic test1 –zookeeper 192.168.130.128:2181 –group offset-father</p>
@@ -80,7 +80,7 @@ window.CONFIG = CONFIG;</script><meta name="generator" content="Hexo 5.4.0"></he
 <li><p>自定义设置开始偏移量：/bin/kafka-consumer-groups.sh –bootstrap-server 192.168.130.128:9092 –group offset-father –topic test1 –execute –reset-offsets –to-earliest</p>
 </li>
 </ul>
-</div><footer class="post-footer"><div class="post-ending ending"><div class="ending__text">------ END ------</div></div><div class="post-copyright copyright"><div class="copyright-author"><span class="copyright-author__name">Author: </span><span class="copyright-author__value"><a href="http://example.com">Yu Jie</a></span></div><div class="copyright-link"><span class="copyright-link__name">Link: </span><span class="copyright-link__value"><a href="http://example.com/2021/11/30/Kafka/Kafka%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/">http://example.com/2021/11/30/Kafka/Kafka%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</a></span></div><div class="copyright-notice"><span class="copyright-notice__name">Copyright: </span><span class="copyright-notice__value">All articles in this blog are licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en" rel="external nofollow" target="_blank">BY-NC-SA</a> unless stating additionally</span></div></div><div class="post-tags"><span class="post-tags-item"><span class="post-tags-item__icon"><i class="fas fa-tag"></i></span><a class="post-tags-item__link" href="http://example.com/tags/Kafka/">Kafka</a></span></div><nav class="post-paginator paginator"><div class="paginator-next"><a class="paginator-next__link" href="/2021/11/30/Kafka/Kafka%E6%AD%BB%E9%94%81%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90(0.11.0.0%E7%89%88%E6%9C%AC)/"><span class="paginator-prev__text">Kafka死锁问题</span><span class="paginator-next__icon"><i class="fas fa-angle-right"></i></span></a></div></nav></footer></div></div></div><div class="sidebar-wrap" id="sidebar-wrap"><aside class="sidebar" id="sidebar"><div class="sidebar-nav"><span class="sidebar-nav-toc current">Catalog</span><span class="sidebar-nav-ov">Overview</span></div><section class="sidebar-toc"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#Kafka%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="toc-number">1.</span> <span class="toc-text">
+</div><footer class="post-footer"><div class="post-ending ending"><div class="ending__text">------ END ------</div></div><div class="post-copyright copyright"><div class="copyright-author"><span class="copyright-author__name">Author: </span><span class="copyright-author__value"><a href="http://example.com">Yu Jie</a></span></div><div class="copyright-link"><span class="copyright-link__name">Link: </span><span class="copyright-link__value"><a href="http://example.com/2021/11/30/Kafka%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/">http://example.com/2021/11/30/Kafka%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4/</a></span></div><div class="copyright-notice"><span class="copyright-notice__name">Copyright: </span><span class="copyright-notice__value">All articles in this blog are licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en" rel="external nofollow" target="_blank">BY-NC-SA</a> unless stating additionally</span></div></div><div class="post-tags"><span class="post-tags-item"><span class="post-tags-item__icon"><i class="fas fa-tag"></i></span><a class="post-tags-item__link" href="http://example.com/tags/Kafka/">Kafka</a></span></div><nav class="post-paginator paginator"><div class="paginator-next"><a class="paginator-next__link" href="/2021/11/30/Kafka%E6%AD%BB%E9%94%81%E9%97%AE%E9%A2%98%E5%88%86%E6%9E%90(0.11.0.0%E7%89%88%E6%9C%AC)/"><span class="paginator-prev__text">Kafka死锁问题</span><span class="paginator-next__icon"><i class="fas fa-angle-right"></i></span></a></div></nav></footer></div></div></div><div class="sidebar-wrap" id="sidebar-wrap"><aside class="sidebar" id="sidebar"><div class="sidebar-nav"><span class="sidebar-nav-toc current">Catalog</span><span class="sidebar-nav-ov">Overview</span></div><section class="sidebar-toc"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#Kafka%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="toc-number">1.</span> <span class="toc-text">
           Kafka常用命令</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%8A%82%E7%82%B9%E5%91%BD%E4%BB%A4"><span class="toc-number">1.1.</span> <span class="toc-text">
           节点命令</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Topic%E5%91%BD%E4%BB%A4"><span class="toc-number">1.2.</span> <span class="toc-text">
           Topic命令</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%B6%88%E8%B4%B9%E7%BB%84%E5%91%BD%E4%BB%A4"><span class="toc-number">1.3.</span> <span class="toc-text">
