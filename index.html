@@ -28,7 +28,106 @@ var CONFIG = {
   sourcePath: {"js":"js","css":"css","images":"images"},
 };
 
-window.CONFIG = CONFIG;</script><meta name="generator" content="Hexo 5.4.0"></head><body><div class="container" id="container"><header class="header" id="header"><div class="header-inner"><nav class="header-nav header-nav--fixed"><div class="header-nav-inner"><div class="header-nav-menubtn"><i class="fas fa-bars"></i></div><div class="header-nav-menu"><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/"><span class="header-nav-menu-item__icon"><i class="fas fa-home"></i></span><span class="header-nav-menu-item__text">Home</span></a></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/archives/"><span class="header-nav-menu-item__icon"><i class="fas fa-folder-open"></i></span><span class="header-nav-menu-item__text">Archives</span></a></div></div><div class="header-nav-mode"><div class="mode"><div class="mode-track"><span class="mode-track-moon"></span><span class="mode-track-sun"></span></div><div class="mode-thumb"></div></div></div></div></nav><div class="header-banner"><div class="header-banner-info"><div class="header-banner-info__title">Coding Heart</div><div class="header-banner-info__subtitle"></div></div></div></div></header><main class="main" id="main"><div class="main-inner"><div class="content-wrap" id="content-wrap"><div class="content content-home" id="content"><section class="postlist"><article class="postlist-item post"><header class="post-header"><h1 class="post-title"><a class="post-title__link" href="/2021/12/01/mysql_storage_engine/">MySQL存储引擎</a></h1><div class="post-meta"><span class="post-meta-item post-meta-item--createtime"><span class="post-meta-item__icon"><i class="far fa-calendar-plus"></i></span><span class="post-meta-item__info">Created</span><span class="post-meta-item__value">2021-12-01</span></span><span class="post-meta-item post-meta-item--updatetime"><span class="post-meta-item__icon"><i class="far fa-calendar-check"></i></span><span class="post-meta-item__info">Updated</span><span class="post-meta-item__value">2021-12-01</span></span></div></header><div class="post-body"><div class="post-excerpt">
+window.CONFIG = CONFIG;</script><meta name="generator" content="Hexo 5.4.0"></head><body><div class="container" id="container"><header class="header" id="header"><div class="header-inner"><nav class="header-nav header-nav--fixed"><div class="header-nav-inner"><div class="header-nav-menubtn"><i class="fas fa-bars"></i></div><div class="header-nav-menu"><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/"><span class="header-nav-menu-item__icon"><i class="fas fa-home"></i></span><span class="header-nav-menu-item__text">Home</span></a></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/archives/"><span class="header-nav-menu-item__icon"><i class="fas fa-folder-open"></i></span><span class="header-nav-menu-item__text">Archives</span></a></div></div><div class="header-nav-mode"><div class="mode"><div class="mode-track"><span class="mode-track-moon"></span><span class="mode-track-sun"></span></div><div class="mode-thumb"></div></div></div></div></nav><div class="header-banner"><div class="header-banner-info"><div class="header-banner-info__title">Coding Heart</div><div class="header-banner-info__subtitle"></div></div></div></div></header><main class="main" id="main"><div class="main-inner"><div class="content-wrap" id="content-wrap"><div class="content content-home" id="content"><section class="postlist"><article class="postlist-item post"><header class="post-header"><h1 class="post-title"><a class="post-title__link" href="/2021/12/01/kafka-evolutionary/">Kafka简单调优</a></h1><div class="post-meta"><span class="post-meta-item post-meta-item--createtime"><span class="post-meta-item__icon"><i class="far fa-calendar-plus"></i></span><span class="post-meta-item__info">Created</span><span class="post-meta-item__value">2021-12-01</span></span><span class="post-meta-item post-meta-item--updatetime"><span class="post-meta-item__icon"><i class="far fa-calendar-check"></i></span><span class="post-meta-item__info">Updated</span><span class="post-meta-item__value">2021-12-01</span></span></div></header><div class="post-body"><div class="post-excerpt">
+        <h3 id="Kafka简单调优">
+          <a href="#Kafka简单调优" class="heading-link"><i class="fas fa-link"></i></a><a href="#Kafka简单调优" class="headerlink" title="Kafka简单调优"></a>Kafka简单调优</h3>
+      <p>应用程序层 - 框架层 - JVM层 -操作系统层，优化效果自上而下衰减</p>
+
+        <h4 id="操作系统">
+          <a href="#操作系统" class="heading-link"><i class="fas fa-link"></i></a><a href="#操作系统" class="headerlink" title="操作系统"></a>操作系统</h4>
+      <ol>
+<li><p>禁掉atime（access time），atime会占用inode资源     </p>
+<p> mount -o noatime</p>
+</li>
+<li><p> 文件系统至少选择ext4或XFS。ZFS &gt; XFS &gt; ext4</p>
+</li>
+<li><p> swap空间的设置，swappiness设置在1 ~ 10，防止OOM Killer   </p>
+</li>
+</ol>
+<p>   临时修改sudo sysctl vm.swappiness=N，永久修改/etc/sysctl.conf，增加vm.swappiness=N</p>
+<ol start="4">
+<li> ulimit -n/vm.max_map_count，前者会出现Too Many File Open，后者会出现OutOfMemoryError: Map failed   </li>
+</ol>
+<p>   修改/etc/sysctl.conf，增加vm.max_map_count=663650，保存后sysctl -p使其生效</p>
+<ol start="5">
+<li> 预留至少一个日志端的大小（log.segment.bytes，默认1GB）</li>
+</ol>
+
+        <h4 id="JVM层">
+          <a href="#JVM层" class="heading-link"><i class="fas fa-link"></i></a><a href="#JVM层" class="headerlink" title="JVM层"></a>JVM层</h4>
+      <ol>
+<li><p> 设置堆大小   6 ~ 8GB ，或者查看GC log，Full GC后存活对象总大小的1.5 ~ 2倍</p>
+</li>
+<li><p> GC收集器   G1</p>
+</li>
+</ol>
+<p>   PS：G1这里有两个重点注意点。首先，G1的Full GC是单线程（很慢），频繁出现的话配置-XX:+PrintAdaptiveSizePolicy排查；其次，G1有区域尺寸，超过区域尺寸一半大小的对象会被分配到大对象区，可以通过增大堆或者增大区域大小，-XX:+G1HeapRegionSize=N</p>
+
+        <h4 id="Broker端">
+          <a href="#Broker端" class="heading-link"><i class="fas fa-link"></i></a><a href="#Broker端" class="headerlink" title="Broker端"></a>Broker端</h4>
+      <p>客户端服务端版本保持一致，版本不一致会令Kafka丧失很多性能收益，如Zero Copy</p>
+<p>​    低版本Consumer：Producer - PageCache - JVM Heap - Legacy Consumer</p>
+<p>​    同版本Consumer：Producer - PageCache - Consumer</p>
+
+        <h4 id="应用层">
+          <a href="#应用层" class="heading-link"><i class="fas fa-link"></i></a><a href="#应用层" class="headerlink" title="应用层"></a>应用层</h4>
+      <ol>
+<li><p> 不要频繁地创建Producer和Consumer对象实例</p>
+</li>
+<li><p> 用完及时关闭，Socket链接、ByteBuffer等</p>
+</li>
+<li><p>合理利用多线程，Kafka的Java Producer是线程安全，直接多线程可共享一个实例；Java Consumer非线程安全，但有消费组+分区保证</p>
+</li>
+</ol>
+
+        <h4 id="调优吞吐量">
+          <a href="#调优吞吐量" class="heading-link"><i class="fas fa-link"></i></a><a href="#调优吞吐量" class="headerlink" title="调优吞吐量"></a>调优吞吐量</h4>
+      <p><strong>Broker端：</strong></p>
+<ol>
+<li><p> 适当增加num.replica.fetchers，不超过CPU核数</p>
+</li>
+<li><p> 调优GC参数避免经常Full GC</p>
+</li>
+</ol>
+<p><strong>Producer端：</strong></p>
+<ol>
+<li><p> 适当增加batch.size，如默认16KB增加到512KB或1MB，防止吞吐量倍副本同步性能拖累</p>
+</li>
+<li><p> 适当增加linger.ms，如10 ~ 100，延迟换更少的网络传输次数，以提升吞吐</p>
+</li>
+<li><p> 设置compression.type=lz4或zstd，减少网络I/O传输量，间接提升吞吐</p>
+</li>
+<li><p> 设置acks=0或1</p>
+</li>
+<li><p> 设置retries=0</p>
+</li>
+<li><p> 如果多线程共享一个Producer实例，增加buffer.memory（尤其是出现了TimeoutException：Failed to allocate memory within the configured max blocking time）</p>
+</li>
+</ol>
+<p><strong>Consumer端：</strong></p>
+<ol>
+<li><p> 采用多Consumer进程或线程同时消费</p>
+</li>
+<li><p> 增加fetch.min.bytes，比如1KB或更大（表示服务端积攒了1KB或以上的数据，就可以返回给Consumer）</p>
+</li>
+</ol>
+
+        <h4 id="调优延时">
+          <a href="#调优延时" class="heading-link"><i class="fas fa-link"></i></a><a href="#调优延时" class="headerlink" title="调优延时"></a>调优延时</h4>
+      <p><strong>Broker端：</strong></p>
+<p>同上适当增加num.replica.fetchers</p>
+<p><strong>Producer端：</strong></p>
+<ol>
+<li><p> 设置linger.ms=0</p>
+</li>
+<li><p> 不启用压缩，compression.type=none</p>
+</li>
+<li><p> 设置acks=1</p>
+</li>
+</ol>
+<p><strong>Consumer端：</strong></p>
+<p>设置fetch.min.bytes=1（服务端积攒1字节数据就吐给Consumer）</p>
+</div></div></article><article class="postlist-item post"><header class="post-header"><h1 class="post-title"><a class="post-title__link" href="/2021/12/01/mysql_storage_engine/">MySQL存储引擎</a></h1><div class="post-meta"><span class="post-meta-item post-meta-item--createtime"><span class="post-meta-item__icon"><i class="far fa-calendar-plus"></i></span><span class="post-meta-item__info">Created</span><span class="post-meta-item__value">2021-12-01</span></span><span class="post-meta-item post-meta-item--updatetime"><span class="post-meta-item__icon"><i class="far fa-calendar-check"></i></span><span class="post-meta-item__info">Updated</span><span class="post-meta-item__value">2021-12-01</span></span></div></header><div class="post-body"><div class="post-excerpt">
         <h3 id="MySQL存储引擎">
           <a href="#MySQL存储引擎" class="heading-link"><i class="fas fa-link"></i></a><a href="#MySQL存储引擎" class="headerlink" title="MySQL存储引擎"></a>MySQL存储引擎</h3>
       
@@ -220,105 +319,6 @@ window.CONFIG = CONFIG;</script><meta name="generator" content="Hexo 5.4.0"></he
 <li><p>社区引擎（Aria、Groonga、OQGraph、Q4M、SphinxSE、Spider、VPForMySQL）</p>
 </li>
 </ul>
-</div></div></article><article class="postlist-item post"><header class="post-header"><h1 class="post-title"><a class="post-title__link" href="/2021/12/01/kafka-evolutionary/">Kafka简单调优</a></h1><div class="post-meta"><span class="post-meta-item post-meta-item--createtime"><span class="post-meta-item__icon"><i class="far fa-calendar-plus"></i></span><span class="post-meta-item__info">Created</span><span class="post-meta-item__value">2021-12-01</span></span><span class="post-meta-item post-meta-item--updatetime"><span class="post-meta-item__icon"><i class="far fa-calendar-check"></i></span><span class="post-meta-item__info">Updated</span><span class="post-meta-item__value">2021-12-01</span></span></div></header><div class="post-body"><div class="post-excerpt">
-        <h3 id="Kafka简单调优">
-          <a href="#Kafka简单调优" class="heading-link"><i class="fas fa-link"></i></a><a href="#Kafka简单调优" class="headerlink" title="Kafka简单调优"></a>Kafka简单调优</h3>
-      <p>应用程序层 - 框架层 - JVM层 -操作系统层，优化效果自上而下衰减</p>
-
-        <h4 id="操作系统">
-          <a href="#操作系统" class="heading-link"><i class="fas fa-link"></i></a><a href="#操作系统" class="headerlink" title="操作系统"></a>操作系统</h4>
-      <ol>
-<li><p>禁掉atime（access time），atime会占用inode资源     </p>
-<p> mount -o noatime</p>
-</li>
-<li><p> 文件系统至少选择ext4或XFS。ZFS &gt; XFS &gt; ext4</p>
-</li>
-<li><p> swap空间的设置，swappiness设置在1 ~ 10，防止OOM Killer   </p>
-</li>
-</ol>
-<p>   临时修改sudo sysctl vm.swappiness=N，永久修改/etc/sysctl.conf，增加vm.swappiness=N</p>
-<ol start="4">
-<li> ulimit -n/vm.max_map_count，前者会出现Too Many File Open，后者会出现OutOfMemoryError: Map failed   </li>
-</ol>
-<p>   修改/etc/sysctl.conf，增加vm.max_map_count=663650，保存后sysctl -p使其生效</p>
-<ol start="5">
-<li> 预留至少一个日志端的大小（log.segment.bytes，默认1GB）</li>
-</ol>
-
-        <h4 id="JVM层">
-          <a href="#JVM层" class="heading-link"><i class="fas fa-link"></i></a><a href="#JVM层" class="headerlink" title="JVM层"></a>JVM层</h4>
-      <ol>
-<li><p> 设置堆大小   6 ~ 8GB ，或者查看GC log，Full GC后存活对象总大小的1.5 ~ 2倍</p>
-</li>
-<li><p> GC收集器   G1</p>
-</li>
-</ol>
-<p>   PS：G1这里有两个重点注意点。首先，G1的Full GC是单线程（很慢），频繁出现的话配置-XX:+PrintAdaptiveSizePolicy排查；其次，G1有区域尺寸，超过区域尺寸一半大小的对象会被分配到大对象区，可以通过增大堆或者增大区域大小，-XX:+G1HeapRegionSize=N</p>
-
-        <h4 id="Broker端">
-          <a href="#Broker端" class="heading-link"><i class="fas fa-link"></i></a><a href="#Broker端" class="headerlink" title="Broker端"></a>Broker端</h4>
-      <p>客户端服务端版本保持一致，版本不一致会令Kafka丧失很多性能收益，如Zero Copy</p>
-<p>​    低版本Consumer：Producer - PageCache - JVM Heap - Legacy Consumer</p>
-<p>​    同版本Consumer：Producer - PageCache - Consumer</p>
-
-        <h4 id="应用层">
-          <a href="#应用层" class="heading-link"><i class="fas fa-link"></i></a><a href="#应用层" class="headerlink" title="应用层"></a>应用层</h4>
-      <ol>
-<li><p> 不要频繁地创建Producer和Consumer对象实例</p>
-</li>
-<li><p> 用完及时关闭，Socket链接、ByteBuffer等</p>
-</li>
-<li><p>合理利用多线程，Kafka的Java Producer是线程安全，直接多线程可共享一个实例；Java Consumer非线程安全，但有消费组+分区保证</p>
-</li>
-</ol>
-
-        <h4 id="调优吞吐量">
-          <a href="#调优吞吐量" class="heading-link"><i class="fas fa-link"></i></a><a href="#调优吞吐量" class="headerlink" title="调优吞吐量"></a>调优吞吐量</h4>
-      <p><strong>Broker端：</strong></p>
-<ol>
-<li><p> 适当增加num.replica.fetchers，不超过CPU核数</p>
-</li>
-<li><p> 调优GC参数避免经常Full GC</p>
-</li>
-</ol>
-<p><strong>Producer端：</strong></p>
-<ol>
-<li><p> 适当增加batch.size，如默认16KB增加到512KB或1MB，防止吞吐量倍副本同步性能拖累</p>
-</li>
-<li><p> 适当增加linger.ms，如10 ~ 100，延迟换更少的网络传输次数，以提升吞吐</p>
-</li>
-<li><p> 设置compression.type=lz4或zstd，减少网络I/O传输量，间接提升吞吐</p>
-</li>
-<li><p> 设置acks=0或1</p>
-</li>
-<li><p> 设置retries=0</p>
-</li>
-<li><p> 如果多线程共享一个Producer实例，增加buffer.memory（尤其是出现了TimeoutException：Failed to allocate memory within the configured max blocking time）</p>
-</li>
-</ol>
-<p><strong>Consumer端：</strong></p>
-<ol>
-<li><p> 采用多Consumer进程或线程同时消费</p>
-</li>
-<li><p> 增加fetch.min.bytes，比如1KB或更大（表示服务端积攒了1KB或以上的数据，就可以返回给Consumer）</p>
-</li>
-</ol>
-
-        <h4 id="调优延时">
-          <a href="#调优延时" class="heading-link"><i class="fas fa-link"></i></a><a href="#调优延时" class="headerlink" title="调优延时"></a>调优延时</h4>
-      <p><strong>Broker端：</strong></p>
-<p>同上适当增加num.replica.fetchers</p>
-<p><strong>Producer端：</strong></p>
-<ol>
-<li><p> 设置linger.ms=0</p>
-</li>
-<li><p> 不启用压缩，compression.type=none</p>
-</li>
-<li><p> 设置acks=1</p>
-</li>
-</ol>
-<p><strong>Consumer端：</strong></p>
-<p>设置fetch.min.bytes=1（服务端积攒1字节数据就吐给Consumer）</p>
 </div></div></article><article class="postlist-item post"><header class="post-header"><h1 class="post-title"><a class="post-title__link" href="/2021/12/01/kafka-deadlock-analysis/">kafka_deadlock_analysis</a></h1><div class="post-meta"><span class="post-meta-item post-meta-item--createtime"><span class="post-meta-item__icon"><i class="far fa-calendar-plus"></i></span><span class="post-meta-item__info">Created</span><span class="post-meta-item__value">2021-12-01</span></span><span class="post-meta-item post-meta-item--updatetime"><span class="post-meta-item__icon"><i class="far fa-calendar-check"></i></span><span class="post-meta-item__info">Updated</span><span class="post-meta-item__value">2021-12-01</span></span></div></header><div class="post-body"><div class="post-excerpt">
         <h2 id="Kafka死锁问题">
           <a href="#Kafka死锁问题" class="heading-link"><i class="fas fa-link"></i></a><a href="#Kafka死锁问题" class="headerlink" title="Kafka死锁问题"></a>Kafka死锁问题</h2>
