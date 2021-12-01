@@ -1,0 +1,239 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="format-detection" content="telephone=no"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black"><link rel="icon" href="/images/icons/favicon-16x16.png?v=2.6.2" type="image/png" sizes="16x16"><link rel="icon" href="/images/icons/favicon-32x32.png?v=2.6.2" type="image/png" sizes="32x32"><meta name="description" content="MySQL存储引擎                           Innodb（应用最广泛，现在默认的存储引擎）       设计目的： 用来处理大量的短期事务 重要特点：  支持事务  支持行级锁  自动崩溃恢复  采用MVCC来支持高并发  基于聚簇索引建立  大量内部优化（可预测性预读、自适应哈希、插入缓冲区等）  支持热备份（MySQL Ent">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL存储引擎">
+<meta property="og:url" content="http://example.com/2021/12/01/mysql_storage_engine/index.html">
+<meta property="og:site_name" content="Coding Heart">
+<meta property="og:description" content="MySQL存储引擎                           Innodb（应用最广泛，现在默认的存储引擎）       设计目的： 用来处理大量的短期事务 重要特点：  支持事务  支持行级锁  自动崩溃恢复  采用MVCC来支持高并发  基于聚簇索引建立  大量内部优化（可预测性预读、自适应哈希、插入缓冲区等）  支持热备份（MySQL Ent">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-12-01T15:11:00.000Z">
+<meta property="article:modified_time" content="2021-12-01T14:23:26.305Z">
+<meta property="article:author" content="Yu Jie">
+<meta property="article:tag" content="mysql">
+<meta name="twitter:card" content="summary"><title>MySQL存储引擎 | Coding Heart</title><link ref="canonical" href="http://example.com/2021/12/01/mysql_storage_engine/"><link rel="dns-prefetch" href="https://cdn.jsdelivr.net"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.12.1/css/all.min.css" type="text/css"><link rel="stylesheet" href="/css/index.css?v=2.6.2"><script>var Stun = window.Stun || {};
+var CONFIG = {
+  root: '/',
+  algolia: undefined,
+  assistSearch: undefined,
+  fontIcon: {"prompt":{"success":"fas fa-check-circle","info":"fas fa-arrow-circle-right","warning":"fas fa-exclamation-circle","error":"fas fa-times-circle"},"copyBtn":"fas fa-copy"},
+  sidebar: {"offsetTop":"20px","tocMaxDepth":6},
+  header: {"enable":true,"showOnPost":true,"scrollDownIcon":false},
+  postWidget: {"endText":true},
+  nightMode: {"enable":true},
+  back2top: {"enable":true},
+  codeblock: {"style":"default","highlight":"light","wordWrap":false},
+  reward: false,
+  fancybox: false,
+  zoomImage: {"gapAside":"20px"},
+  galleryWaterfall: undefined,
+  lazyload: false,
+  pjax: undefined,
+  externalLink: {"icon":{"enable":true,"name":"fas fa-external-link-alt"}},
+  shortcuts: undefined,
+  prompt: {"copyButton":"Copy","copySuccess":"Copy Success","copyError":"Copy Error"},
+  sourcePath: {"js":"js","css":"css","images":"images"},
+};
+
+window.CONFIG = CONFIG;</script><meta name="generator" content="Hexo 5.4.0"></head><body><div class="container" id="container"><header class="header" id="header"><div class="header-inner"><nav class="header-nav header-nav--fixed"><div class="header-nav-inner"><div class="header-nav-menubtn"><i class="fas fa-bars"></i></div><div class="header-nav-menu"><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/"><span class="header-nav-menu-item__icon"><i class="fas fa-home"></i></span><span class="header-nav-menu-item__text">Home</span></a></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/archives/"><span class="header-nav-menu-item__icon"><i class="fas fa-folder-open"></i></span><span class="header-nav-menu-item__text">Archives</span></a></div></div><div class="header-nav-mode"><div class="mode"><div class="mode-track"><span class="mode-track-moon"></span><span class="mode-track-sun"></span></div><div class="mode-thumb"></div></div></div></div></nav><div class="header-banner"><div class="header-banner-info"><div class="header-banner-info__title">Coding Heart</div><div class="header-banner-info__subtitle"></div></div></div></div></header><main class="main" id="main"><div class="main-inner"><div class="content-wrap" id="content-wrap"><div class="content" id="content"><!-- Just used to judge whether it is an article page--><div id="is-post"></div><div class="post"><header class="post-header"><h1 class="post-title">MySQL存储引擎</h1><div class="post-meta"><span class="post-meta-item post-meta-item--createtime"><span class="post-meta-item__icon"><i class="far fa-calendar-plus"></i></span><span class="post-meta-item__info">Created</span><span class="post-meta-item__value">2021-12-01</span></span><span class="post-meta-item post-meta-item--updatetime"><span class="post-meta-item__icon"><i class="far fa-calendar-check"></i></span><span class="post-meta-item__info">Updated</span><span class="post-meta-item__value">2021-12-01</span></span></div></header><div class="post-body">
+        <h3 id="MySQL存储引擎">
+          <a href="#MySQL存储引擎" class="heading-link"><i class="fas fa-link"></i></a><a href="#MySQL存储引擎" class="headerlink" title="MySQL存储引擎"></a>MySQL存储引擎</h3>
+      
+        <h4 id="Innodb（应用最广泛，现在默认的存储引擎）">
+          <a href="#Innodb（应用最广泛，现在默认的存储引擎）" class="heading-link"><i class="fas fa-link"></i></a><a href="#Innodb（应用最广泛，现在默认的存储引擎）" class="headerlink" title="Innodb（应用最广泛，现在默认的存储引擎）"></a>Innodb（应用最广泛，现在默认的存储引擎）</h4>
+      <p><strong>设计目的：</strong></p>
+<p>用来处理大量的短期事务</p>
+<p><strong>重要特点：</strong></p>
+<ul>
+<li><p>支持事务</p>
+</li>
+<li><p>支持行级锁</p>
+</li>
+<li><p>自动崩溃恢复</p>
+</li>
+<li><p>采用MVCC来支持高并发</p>
+</li>
+<li><p>基于聚簇索引建立</p>
+</li>
+<li><p>大量内部优化（可预测性预读、自适应哈希、插入缓冲区等）</p>
+</li>
+<li><p>支持热备份（MySQL Enterprise Backup、XtraBackup也可以）</p>
+</li>
+</ul>
+<p><strong>重要特性：</strong></p>
+<ul>
+<li><p>利用排序创建索引</p>
+</li>
+<li><p>删除或者增加索引时不需要复制全表数据</p>
+</li>
+<li><p>新的支持压缩的存储格式</p>
+</li>
+<li><p>新的大型列值如BLOB的存储方式</p>
+</li>
+<li><p>文件格式管理</p>
+</li>
+</ul>
+
+        <h4 id="MyISAM（5-1及之前的默认存储引擎）">
+          <a href="#MyISAM（5-1及之前的默认存储引擎）" class="heading-link"><i class="fas fa-link"></i></a><a href="#MyISAM（5-1及之前的默认存储引擎）" class="headerlink" title="MyISAM（5.1及之前的默认存储引擎）"></a>MyISAM（5.1及之前的默认存储引擎）</h4>
+      <p><strong>重要特点：</strong></p>
+<ul>
+<li><p>默认只能处理256TB（因为指针长度是6字节，最多可以修改到8字节，MAX_ROWS和AVG_ROW_LENGTH)</p>
+</li>
+<li><p>表存储在两个文件（.MYD存数据文件, .MYI存索引文件）</p>
+</li>
+</ul>
+<p><strong>重要特性：</strong></p>
+<ul>
+<li><p>表级锁，读表共享锁，写表排他锁（但是可以通过并发插入，在读表的时候插入新记录）</p>
+</li>
+<li><p>支持修复（有可能会丢失数据）</p>
+</li>
+<li><p>全文索引（基于分词创建）</p>
+</li>
+<li><p>对BLOB和TEXT等长字段，可以基于前500个字符创建索引</p>
+</li>
+<li><p>延迟更新索引键（DELAY_KEY_WRITE，索引修改写入到内存钟的键缓冲区，键缓冲区加Mutex锁，在清理缓冲区或关闭表时写入磁盘。极大提升了性能，但有可能在异常情况下造成索引损坏）</p>
+</li>
+<li><p>压缩表（只读，支持索引且索引也只读。可以减少磁盘空间占用，减少磁盘IO）</p>
+</li>
+<li><p>空间函数（支持地理空间搜索）</p>
+</li>
+</ul>
+<p><strong>主要缺陷：</strong></p>
+<ul>
+<li><p>不支持事务</p>
+</li>
+<li><p>不支持行级锁（并发写入的性能较低）</p>
+</li>
+<li><p>崩溃后无法安全恢复</p>
+</li>
+</ul>
+
+        <h4 id="Archive（针对插入和压缩做了优化的简单引擎）">
+          <a href="#Archive（针对插入和压缩做了优化的简单引擎）" class="heading-link"><i class="fas fa-link"></i></a><a href="#Archive（针对插入和压缩做了优化的简单引擎）" class="headerlink" title="Archive（针对插入和压缩做了优化的简单引擎）"></a>Archive（针对插入和压缩做了优化的简单引擎）</h4>
+      <p><strong>重要特点：</strong></p>
+<ul>
+<li><p>只支持INSERT和SELECT</p>
+</li>
+<li><p>支持行级锁</p>
+</li>
+<li><p>支持专用的缓冲区</p>
+</li>
+<li><p>缓存所有的写并利用zlib对插入行进行压缩（磁盘I/O比MyISAM更少）</p>
+</li>
+</ul>
+<p><strong>重要特性：</strong></p>
+<ul>
+<li><p>一个查询返回表中存在的所有行数前，阻止其他的SELECT执行（保证一致性读）</p>
+</li>
+<li><p>批量插入完成前对读操作不可见（模仿了事务机制和MVCC）</p>
+</li>
+</ul>
+<p><strong>适用场景：</strong></p>
+<ol>
+<li><p>日志数据采集类应用</p>
+</li>
+<li><p>需要更快INSERT操作</p>
+</li>
+</ol>
+
+        <h4 id="Blackhole（仅可作为特殊的复制架构和日志审核手段）（经常带来问题，不推荐使用）">
+          <a href="#Blackhole（仅可作为特殊的复制架构和日志审核手段）（经常带来问题，不推荐使用）" class="heading-link"><i class="fas fa-link"></i></a><a href="#Blackhole（仅可作为特殊的复制架构和日志审核手段）（经常带来问题，不推荐使用）" class="headerlink" title="Blackhole（仅可作为特殊的复制架构和日志审核手段）（经常带来问题，不推荐使用）"></a>Blackhole（仅可作为特殊的复制架构和日志审核手段）（经常带来问题，不推荐使用）</h4>
+      
+        <h4 id="CSV（作为数据交换的机制）">
+          <a href="#CSV（作为数据交换的机制）" class="heading-link"><i class="fas fa-link"></i></a><a href="#CSV（作为数据交换的机制）" class="headerlink" title="CSV（作为数据交换的机制）"></a>CSV（作为数据交换的机制）</h4>
+      <p><strong>重要特点：</strong></p>
+<ul>
+<li><p>可以将CSV文件作为表（CSV作为表不支持索引）</p>
+</li>
+<li><p>可以在数据库运行时拷入或拷出文件</p>
+</li>
+</ul>
+<p><strong>适用场景：</strong></p>
+<ul>
+<li><p>Excel等电子表格软件中的数据快速存入MySQL</p>
+</li>
+<li><p>外部程序需要立即从表的数据文件中读取CSV格式的数据</p>
+</li>
+</ul>
+
+        <h4 id="Federated（提供跨服务器的灵活性）（经常带来问题，默认禁用）">
+          <a href="#Federated（提供跨服务器的灵活性）（经常带来问题，默认禁用）" class="heading-link"><i class="fas fa-link"></i></a><a href="#Federated（提供跨服务器的灵活性）（经常带来问题，默认禁用）" class="headerlink" title="Federated（提供跨服务器的灵活性）（经常带来问题，默认禁用）"></a>Federated（提供跨服务器的灵活性）（经常带来问题，默认禁用）</h4>
+      <p><strong>设计目的：</strong></p>
+<p>为了和Microsoft SQL Server和Oracle竞争</p>
+<p><strong>重要特点：</strong></p>
+<ul>
+<li><p>其他MySQL服务器的一个代理</p>
+</li>
+<li><p>能够建立远程MySQL连接，将查询传输到远程服务器上执行</p>
+</li>
+</ul>
+
+        <h4 id="Memory（早期叫HEAP，内存数据引擎，超快访问速度）：">
+          <a href="#Memory（早期叫HEAP，内存数据引擎，超快访问速度）：" class="heading-link"><i class="fas fa-link"></i></a><a href="#Memory（早期叫HEAP，内存数据引擎，超快访问速度）：" class="headerlink" title="Memory（早期叫HEAP，内存数据引擎，超快访问速度）："></a>Memory（早期叫HEAP，内存数据引擎，超快访问速度）：</h4>
+      <p><strong>重要特点：</strong></p>
+<ul>
+<li><p>数据都存在内存中（不需要磁盘I/O，查询速度至少比MyISAM快一个数量级）</p>
+</li>
+<li><p>重启后会保留表结构，但数据会丢失</p>
+</li>
+<li><p>支持Hash索引</p>
+</li>
+</ul>
+<p><strong>主要缺陷：</strong></p>
+<ul>
+<li><p>仅支持表级锁（并发写入的性能较低）</p>
+</li>
+<li><p>不支持BLOB或TEXT类型的列</p>
+</li>
+<li><p>每行的长度固定（即使指定VARCHAR，实际存储也会转换成CHAR，可能导致内存浪费）</p>
+</li>
+</ul>
+<p><strong>适用场景：</strong></p>
+<ol>
+<li><p>用于查找或映射表</p>
+</li>
+<li><p>用于缓存周期性聚合数据的结果</p>
+</li>
+<li><p>用于保存数据分析中产生的中间数据</p>
+</li>
+<li><p>MySQL内部使用的临时表（如果MySQL查询中间结果太大超过了Memory表的限制，或包含BLOB或TEXT字段，临时表自动转换为MyISAM）</p>
+</li>
+</ol>
+
+        <h4 id="Merge（用于日志或者数据仓库类应用，被MySQL分区功能完全击败，已放弃）">
+          <a href="#Merge（用于日志或者数据仓库类应用，被MySQL分区功能完全击败，已放弃）" class="heading-link"><i class="fas fa-link"></i></a><a href="#Merge（用于日志或者数据仓库类应用，被MySQL分区功能完全击败，已放弃）" class="headerlink" title="Merge（用于日志或者数据仓库类应用，被MySQL分区功能完全击败，已放弃）"></a>Merge（用于日志或者数据仓库类应用，被MySQL分区功能完全击败，已放弃）</h4>
+      <p><strong>重要特点：</strong></p>
+<ul>
+<li><p>很多特点类同MyISAM（MyISAM的变种）</p>
+</li>
+<li><p>多个MyISAM表合并出来的虚拟表</p>
+</li>
+</ul>
+
+        <h4 id="NDB（集群引擎）">
+          <a href="#NDB（集群引擎）" class="heading-link"><i class="fas fa-link"></i></a><a href="#NDB（集群引擎）" class="headerlink" title="NDB（集群引擎）"></a>NDB（集群引擎）</h4>
+      <p><strong>重要特点：</strong></p>
+<p>多MySQL服务器+NDB集群存储引擎+NDB数据库（保证分布式、share-nothing、容灾及高可用）=MySQL集群</p>
+
+        <h4 id="第三方存储引擎">
+          <a href="#第三方存储引擎" class="heading-link"><i class="fas fa-link"></i></a><a href="#第三方存储引擎" class="headerlink" title="第三方存储引擎"></a>第三方存储引擎</h4>
+      <ul>
+<li><p>OLTP类引擎（XtraDB、PBXT）</p>
+</li>
+<li><p>面向列的引擎（Infobright）</p>
+</li>
+<li><p>社区引擎（Aria、Groonga、OQGraph、Q4M、SphinxSE、Spider、VPForMySQL）</p>
+</li>
+</ul>
+</div><footer class="post-footer"><div class="post-ending ending"><div class="ending__text">------ END ------</div></div><div class="post-copyright copyright"><div class="copyright-author"><span class="copyright-author__name">Author: </span><span class="copyright-author__value"><a href="http://example.com">Yu Jie</a></span></div><div class="copyright-link"><span class="copyright-link__name">Link: </span><span class="copyright-link__value"><a href="http://example.com/2021/12/01/mysql_storage_engine/">http://example.com/2021/12/01/mysql_storage_engine/</a></span></div><div class="copyright-notice"><span class="copyright-notice__name">Copyright: </span><span class="copyright-notice__value">All articles in this blog are licensed under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en" rel="external nofollow" target="_blank">BY-NC-SA</a> unless stating additionally</span></div></div><div class="post-tags"><span class="post-tags-item"><span class="post-tags-item__icon"><i class="fas fa-tag"></i></span><a class="post-tags-item__link" href="http://example.com/tags/mysql/">mysql</a></span></div><nav class="post-paginator paginator"><div class="paginator-prev"><a class="paginator-prev__link" href="/2021/12/01/kafka-evolutionary/"><span class="paginator-prev__icon"><i class="fas fa-angle-left"></i></span><span class="paginator-prev__text">Kafka简单调优</span></a></div><div class="paginator-next"><a class="paginator-next__link" href="/2021/12/01/kafka-deadlock-analysis/"><span class="paginator-prev__text">kafka_deadlock_analysis</span><span class="paginator-next__icon"><i class="fas fa-angle-right"></i></span></a></div></nav></footer></div></div></div><div class="sidebar-wrap" id="sidebar-wrap"><aside class="sidebar" id="sidebar"><div class="sidebar-nav"><span class="sidebar-nav-toc current">Catalog</span><span class="sidebar-nav-ov">Overview</span></div><section class="sidebar-toc"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#MySQL%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E"><span class="toc-number">1.</span> <span class="toc-text">
+          MySQL存储引擎</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Innodb%EF%BC%88%E5%BA%94%E7%94%A8%E6%9C%80%E5%B9%BF%E6%B3%9B%EF%BC%8C%E7%8E%B0%E5%9C%A8%E9%BB%98%E8%AE%A4%E7%9A%84%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%EF%BC%89"><span class="toc-number">1.1.</span> <span class="toc-text">
+          Innodb（应用最广泛，现在默认的存储引擎）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#MyISAM%EF%BC%885-1%E5%8F%8A%E4%B9%8B%E5%89%8D%E7%9A%84%E9%BB%98%E8%AE%A4%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%EF%BC%89"><span class="toc-number">1.2.</span> <span class="toc-text">
+          MyISAM（5.1及之前的默认存储引擎）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Archive%EF%BC%88%E9%92%88%E5%AF%B9%E6%8F%92%E5%85%A5%E5%92%8C%E5%8E%8B%E7%BC%A9%E5%81%9A%E4%BA%86%E4%BC%98%E5%8C%96%E7%9A%84%E7%AE%80%E5%8D%95%E5%BC%95%E6%93%8E%EF%BC%89"><span class="toc-number">1.3.</span> <span class="toc-text">
+          Archive（针对插入和压缩做了优化的简单引擎）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Blackhole%EF%BC%88%E4%BB%85%E5%8F%AF%E4%BD%9C%E4%B8%BA%E7%89%B9%E6%AE%8A%E7%9A%84%E5%A4%8D%E5%88%B6%E6%9E%B6%E6%9E%84%E5%92%8C%E6%97%A5%E5%BF%97%E5%AE%A1%E6%A0%B8%E6%89%8B%E6%AE%B5%EF%BC%89%EF%BC%88%E7%BB%8F%E5%B8%B8%E5%B8%A6%E6%9D%A5%E9%97%AE%E9%A2%98%EF%BC%8C%E4%B8%8D%E6%8E%A8%E8%8D%90%E4%BD%BF%E7%94%A8%EF%BC%89"><span class="toc-number">1.4.</span> <span class="toc-text">
+          Blackhole（仅可作为特殊的复制架构和日志审核手段）（经常带来问题，不推荐使用）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#CSV%EF%BC%88%E4%BD%9C%E4%B8%BA%E6%95%B0%E6%8D%AE%E4%BA%A4%E6%8D%A2%E7%9A%84%E6%9C%BA%E5%88%B6%EF%BC%89"><span class="toc-number">1.5.</span> <span class="toc-text">
+          CSV（作为数据交换的机制）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Federated%EF%BC%88%E6%8F%90%E4%BE%9B%E8%B7%A8%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E7%81%B5%E6%B4%BB%E6%80%A7%EF%BC%89%EF%BC%88%E7%BB%8F%E5%B8%B8%E5%B8%A6%E6%9D%A5%E9%97%AE%E9%A2%98%EF%BC%8C%E9%BB%98%E8%AE%A4%E7%A6%81%E7%94%A8%EF%BC%89"><span class="toc-number">1.6.</span> <span class="toc-text">
+          Federated（提供跨服务器的灵活性）（经常带来问题，默认禁用）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Memory%EF%BC%88%E6%97%A9%E6%9C%9F%E5%8F%ABHEAP%EF%BC%8C%E5%86%85%E5%AD%98%E6%95%B0%E6%8D%AE%E5%BC%95%E6%93%8E%EF%BC%8C%E8%B6%85%E5%BF%AB%E8%AE%BF%E9%97%AE%E9%80%9F%E5%BA%A6%EF%BC%89%EF%BC%9A"><span class="toc-number">1.7.</span> <span class="toc-text">
+          Memory（早期叫HEAP，内存数据引擎，超快访问速度）：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Merge%EF%BC%88%E7%94%A8%E4%BA%8E%E6%97%A5%E5%BF%97%E6%88%96%E8%80%85%E6%95%B0%E6%8D%AE%E4%BB%93%E5%BA%93%E7%B1%BB%E5%BA%94%E7%94%A8%EF%BC%8C%E8%A2%ABMySQL%E5%88%86%E5%8C%BA%E5%8A%9F%E8%83%BD%E5%AE%8C%E5%85%A8%E5%87%BB%E8%B4%A5%EF%BC%8C%E5%B7%B2%E6%94%BE%E5%BC%83%EF%BC%89"><span class="toc-number">1.8.</span> <span class="toc-text">
+          Merge（用于日志或者数据仓库类应用，被MySQL分区功能完全击败，已放弃）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#NDB%EF%BC%88%E9%9B%86%E7%BE%A4%E5%BC%95%E6%93%8E%EF%BC%89"><span class="toc-number">1.9.</span> <span class="toc-text">
+          NDB（集群引擎）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AC%AC%E4%B8%89%E6%96%B9%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E"><span class="toc-number">1.10.</span> <span class="toc-text">
+          第三方存储引擎</span></a></li></ol></li></ol></section><!-- ov = overview--><section class="sidebar-ov hide"><div class="sidebar-ov-author"><div class="sidebar-ov-author__avatar"><img class="sidebar-ov-author__avatar_img" src="/images/icons/stun-logo.svg" alt="avatar"></div><p class="sidebar-ov-author__text">Yuyuyyyyyy</p></div><div class="sidebar-ov-state"><a class="sidebar-ov-state-item sidebar-ov-state-item--posts" href="/archives/"><div class="sidebar-ov-state-item__count">4</div><div class="sidebar-ov-state-item__name">Archives</div></a></div><div class="sidebar-ov-cc"><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en" target="_blank" rel="noopener" data-popover="Creative Commons" data-popover-pos="up"><img src="/images/cc-by-nc-sa.svg"></a></div></section><div class="sidebar-reading"><div class="sidebar-reading-info"><span class="sidebar-reading-info__text">You have read </span><span class="sidebar-reading-info__num">0</span><span class="sidebar-reading-info__perc">%</span></div><div class="sidebar-reading-line"></div></div></aside></div><div class="clearfix"></div></div></main><footer class="footer" id="footer"><div class="footer-inner"><div><span>Copyright © 2021</span><span class="footer__icon"><i class="fas fa-heart"></i></span><span>Yu Jie</span></div><div><span>Powered by <a href="http://hexo.io/" title="Hexo" target="_blank" rel="noopener">Hexo</a></span><span> v5.4.0</span><span class="footer__devider">|</span><span>Theme - <a href="https://github.com/liuyib/hexo-theme-stun/" title="Stun" target="_blank" rel="noopener">Stun</a></span><span> v2.6.2</span></div></div></footer><div class="loading-bar" id="loading-bar"><div class="loading-bar__progress"></div></div><div class="back2top" id="back2top"><span class="back2top__icon"><i class="fas fa-rocket"></i></span></div></div><script src="https://cdn.jsdelivr.net/npm/jquery@v3.4.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@1.5.2/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@1.5.2/velocity.ui.min.js"></script><script src="/js/utils.js?v=2.6.2"></script><script src="/js/stun-boot.js?v=2.6.2"></script><script src="/js/scroll.js?v=2.6.2"></script><script src="/js/header.js?v=2.6.2"></script><script src="/js/sidebar.js?v=2.6.2"></script></body></html>

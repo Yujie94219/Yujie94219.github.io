@@ -28,7 +28,298 @@ var CONFIG = {
   sourcePath: {"js":"js","css":"css","images":"images"},
 };
 
-window.CONFIG = CONFIG;</script><meta name="generator" content="Hexo 5.4.0"></head><body><div class="container" id="container"><header class="header" id="header"><div class="header-inner"><nav class="header-nav header-nav--fixed"><div class="header-nav-inner"><div class="header-nav-menubtn"><i class="fas fa-bars"></i></div><div class="header-nav-menu"><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/"><span class="header-nav-menu-item__icon"><i class="fas fa-home"></i></span><span class="header-nav-menu-item__text">Home</span></a></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/archives/"><span class="header-nav-menu-item__icon"><i class="fas fa-folder-open"></i></span><span class="header-nav-menu-item__text">Archives</span></a></div></div><div class="header-nav-mode"><div class="mode"><div class="mode-track"><span class="mode-track-moon"></span><span class="mode-track-sun"></span></div><div class="mode-thumb"></div></div></div></div></nav><div class="header-banner"><div class="header-banner-info"><div class="header-banner-info__title">Coding Heart</div><div class="header-banner-info__subtitle"></div></div></div></div></header><main class="main" id="main"><div class="main-inner"><div class="content-wrap" id="content-wrap"><div class="content content-home" id="content"><section class="postlist"><article class="postlist-item post"><header class="post-header"><h1 class="post-title"><a class="post-title__link" href="/2021/12/01/kafka-deadlock-analysis/">kafka_deadlock_analysis</a></h1><div class="post-meta"><span class="post-meta-item post-meta-item--createtime"><span class="post-meta-item__icon"><i class="far fa-calendar-plus"></i></span><span class="post-meta-item__info">Created</span><span class="post-meta-item__value">2021-12-01</span></span><span class="post-meta-item post-meta-item--updatetime"><span class="post-meta-item__icon"><i class="far fa-calendar-check"></i></span><span class="post-meta-item__info">Updated</span><span class="post-meta-item__value">2021-12-01</span></span></div></header><div class="post-body"><div class="post-excerpt">
+window.CONFIG = CONFIG;</script><meta name="generator" content="Hexo 5.4.0"></head><body><div class="container" id="container"><header class="header" id="header"><div class="header-inner"><nav class="header-nav header-nav--fixed"><div class="header-nav-inner"><div class="header-nav-menubtn"><i class="fas fa-bars"></i></div><div class="header-nav-menu"><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/"><span class="header-nav-menu-item__icon"><i class="fas fa-home"></i></span><span class="header-nav-menu-item__text">Home</span></a></div><div class="header-nav-menu-item"><a class="header-nav-menu-item__link" href="/archives/"><span class="header-nav-menu-item__icon"><i class="fas fa-folder-open"></i></span><span class="header-nav-menu-item__text">Archives</span></a></div></div><div class="header-nav-mode"><div class="mode"><div class="mode-track"><span class="mode-track-moon"></span><span class="mode-track-sun"></span></div><div class="mode-thumb"></div></div></div></div></nav><div class="header-banner"><div class="header-banner-info"><div class="header-banner-info__title">Coding Heart</div><div class="header-banner-info__subtitle"></div></div></div></div></header><main class="main" id="main"><div class="main-inner"><div class="content-wrap" id="content-wrap"><div class="content content-home" id="content"><section class="postlist"><article class="postlist-item post"><header class="post-header"><h1 class="post-title"><a class="post-title__link" href="/2021/12/01/kafka-evolutionary/">Kafka简单调优</a></h1><div class="post-meta"><span class="post-meta-item post-meta-item--createtime"><span class="post-meta-item__icon"><i class="far fa-calendar-plus"></i></span><span class="post-meta-item__info">Created</span><span class="post-meta-item__value">2021-12-01</span></span><span class="post-meta-item post-meta-item--updatetime"><span class="post-meta-item__icon"><i class="far fa-calendar-check"></i></span><span class="post-meta-item__info">Updated</span><span class="post-meta-item__value">2021-12-01</span></span></div></header><div class="post-body"><div class="post-excerpt">
+        <h3 id="Kafka简单调优">
+          <a href="#Kafka简单调优" class="heading-link"><i class="fas fa-link"></i></a><a href="#Kafka简单调优" class="headerlink" title="Kafka简单调优"></a>Kafka简单调优</h3>
+      <p>应用程序层 - 框架层 - JVM层 -操作系统层，优化效果自上而下衰减</p>
+
+        <h4 id="操作系统">
+          <a href="#操作系统" class="heading-link"><i class="fas fa-link"></i></a><a href="#操作系统" class="headerlink" title="操作系统"></a>操作系统</h4>
+      <ol>
+<li><p>禁掉atime（access time），atime会占用inode资源     </p>
+<p> mount -o noatime</p>
+</li>
+<li><p> 文件系统至少选择ext4或XFS。ZFS &gt; XFS &gt; ext4</p>
+</li>
+<li><p> swap空间的设置，swappiness设置在1 ~ 10，防止OOM Killer   </p>
+</li>
+</ol>
+<p>   临时修改sudo sysctl vm.swappiness=N，永久修改/etc/sysctl.conf，增加vm.swappiness=N</p>
+<ol start="4">
+<li> ulimit -n/vm.max_map_count，前者会出现Too Many File Open，后者会出现OutOfMemoryError: Map failed   </li>
+</ol>
+<p>   修改/etc/sysctl.conf，增加vm.max_map_count=663650，保存后sysctl -p使其生效</p>
+<ol start="5">
+<li> 预留至少一个日志端的大小（log.segment.bytes，默认1GB）</li>
+</ol>
+
+        <h4 id="JVM层">
+          <a href="#JVM层" class="heading-link"><i class="fas fa-link"></i></a><a href="#JVM层" class="headerlink" title="JVM层"></a>JVM层</h4>
+      <ol>
+<li><p> 设置堆大小   6 ~ 8GB ，或者查看GC log，Full GC后存活对象总大小的1.5 ~ 2倍</p>
+</li>
+<li><p> GC收集器   G1</p>
+</li>
+</ol>
+<p>   PS：G1这里有两个重点注意点。首先，G1的Full GC是单线程（很慢），频繁出现的话配置-XX:+PrintAdaptiveSizePolicy排查；其次，G1有区域尺寸，超过区域尺寸一半大小的对象会被分配到大对象区，可以通过增大堆或者增大区域大小，-XX:+G1HeapRegionSize=N</p>
+
+        <h4 id="Broker端">
+          <a href="#Broker端" class="heading-link"><i class="fas fa-link"></i></a><a href="#Broker端" class="headerlink" title="Broker端"></a>Broker端</h4>
+      <p>客户端服务端版本保持一致，版本不一致会令Kafka丧失很多性能收益，如Zero Copy</p>
+<p>​    低版本Consumer：Producer - PageCache - JVM Heap - Legacy Consumer</p>
+<p>​    同版本Consumer：Producer - PageCache - Consumer</p>
+
+        <h4 id="应用层">
+          <a href="#应用层" class="heading-link"><i class="fas fa-link"></i></a><a href="#应用层" class="headerlink" title="应用层"></a>应用层</h4>
+      <ol>
+<li><p> 不要频繁地创建Producer和Consumer对象实例</p>
+</li>
+<li><p> 用完及时关闭，Socket链接、ByteBuffer等</p>
+</li>
+<li><p>合理利用多线程，Kafka的Java Producer是线程安全，直接多线程可共享一个实例；Java Consumer非线程安全，但有消费组+分区保证</p>
+</li>
+</ol>
+
+        <h4 id="调优吞吐量">
+          <a href="#调优吞吐量" class="heading-link"><i class="fas fa-link"></i></a><a href="#调优吞吐量" class="headerlink" title="调优吞吐量"></a>调优吞吐量</h4>
+      <p><strong>Broker端：</strong></p>
+<ol>
+<li><p> 适当增加num.replica.fetchers，不超过CPU核数</p>
+</li>
+<li><p> 调优GC参数避免经常Full GC</p>
+</li>
+</ol>
+<p><strong>Producer端：</strong></p>
+<ol>
+<li><p> 适当增加batch.size，如默认16KB增加到512KB或1MB，防止吞吐量倍副本同步性能拖累</p>
+</li>
+<li><p> 适当增加linger.ms，如10 ~ 100，延迟换更少的网络传输次数，以提升吞吐</p>
+</li>
+<li><p> 设置compression.type=lz4或zstd，减少网络I/O传输量，间接提升吞吐</p>
+</li>
+<li><p> 设置acks=0或1</p>
+</li>
+<li><p> 设置retries=0</p>
+</li>
+<li><p> 如果多线程共享一个Producer实例，增加buffer.memory（尤其是出现了TimeoutException：Failed to allocate memory within the configured max blocking time）</p>
+</li>
+</ol>
+<p><strong>Consumer端：</strong></p>
+<ol>
+<li><p> 采用多Consumer进程或线程同时消费</p>
+</li>
+<li><p> 增加fetch.min.bytes，比如1KB或更大（表示服务端积攒了1KB或以上的数据，就可以返回给Consumer）</p>
+</li>
+</ol>
+
+        <h4 id="调优延时">
+          <a href="#调优延时" class="heading-link"><i class="fas fa-link"></i></a><a href="#调优延时" class="headerlink" title="调优延时"></a>调优延时</h4>
+      <p><strong>Broker端：</strong></p>
+<p>同上适当增加num.replica.fetchers</p>
+<p><strong>Producer端：</strong></p>
+<ol>
+<li><p> 设置linger.ms=0</p>
+</li>
+<li><p> 不启用压缩，compression.type=none</p>
+</li>
+<li><p> 设置acks=1</p>
+</li>
+</ol>
+<p><strong>Consumer端：</strong></p>
+<p>设置fetch.min.bytes=1（服务端积攒1字节数据就吐给Consumer）</p>
+</div></div></article><article class="postlist-item post"><header class="post-header"><h1 class="post-title"><a class="post-title__link" href="/2021/12/01/mysql_storage_engine/">MySQL存储引擎</a></h1><div class="post-meta"><span class="post-meta-item post-meta-item--createtime"><span class="post-meta-item__icon"><i class="far fa-calendar-plus"></i></span><span class="post-meta-item__info">Created</span><span class="post-meta-item__value">2021-12-01</span></span><span class="post-meta-item post-meta-item--updatetime"><span class="post-meta-item__icon"><i class="far fa-calendar-check"></i></span><span class="post-meta-item__info">Updated</span><span class="post-meta-item__value">2021-12-01</span></span></div></header><div class="post-body"><div class="post-excerpt">
+        <h3 id="MySQL存储引擎">
+          <a href="#MySQL存储引擎" class="heading-link"><i class="fas fa-link"></i></a><a href="#MySQL存储引擎" class="headerlink" title="MySQL存储引擎"></a>MySQL存储引擎</h3>
+      
+        <h4 id="Innodb（应用最广泛，现在默认的存储引擎）">
+          <a href="#Innodb（应用最广泛，现在默认的存储引擎）" class="heading-link"><i class="fas fa-link"></i></a><a href="#Innodb（应用最广泛，现在默认的存储引擎）" class="headerlink" title="Innodb（应用最广泛，现在默认的存储引擎）"></a>Innodb（应用最广泛，现在默认的存储引擎）</h4>
+      <p><strong>设计目的：</strong></p>
+<p>用来处理大量的短期事务</p>
+<p><strong>重要特点：</strong></p>
+<ul>
+<li><p>支持事务</p>
+</li>
+<li><p>支持行级锁</p>
+</li>
+<li><p>自动崩溃恢复</p>
+</li>
+<li><p>采用MVCC来支持高并发</p>
+</li>
+<li><p>基于聚簇索引建立</p>
+</li>
+<li><p>大量内部优化（可预测性预读、自适应哈希、插入缓冲区等）</p>
+</li>
+<li><p>支持热备份（MySQL Enterprise Backup、XtraBackup也可以）</p>
+</li>
+</ul>
+<p><strong>重要特性：</strong></p>
+<ul>
+<li><p>利用排序创建索引</p>
+</li>
+<li><p>删除或者增加索引时不需要复制全表数据</p>
+</li>
+<li><p>新的支持压缩的存储格式</p>
+</li>
+<li><p>新的大型列值如BLOB的存储方式</p>
+</li>
+<li><p>文件格式管理</p>
+</li>
+</ul>
+
+        <h4 id="MyISAM（5-1及之前的默认存储引擎）">
+          <a href="#MyISAM（5-1及之前的默认存储引擎）" class="heading-link"><i class="fas fa-link"></i></a><a href="#MyISAM（5-1及之前的默认存储引擎）" class="headerlink" title="MyISAM（5.1及之前的默认存储引擎）"></a>MyISAM（5.1及之前的默认存储引擎）</h4>
+      <p><strong>重要特点：</strong></p>
+<ul>
+<li><p>默认只能处理256TB（因为指针长度是6字节，最多可以修改到8字节，MAX_ROWS和AVG_ROW_LENGTH)</p>
+</li>
+<li><p>表存储在两个文件（.MYD存数据文件, .MYI存索引文件）</p>
+</li>
+</ul>
+<p><strong>重要特性：</strong></p>
+<ul>
+<li><p>表级锁，读表共享锁，写表排他锁（但是可以通过并发插入，在读表的时候插入新记录）</p>
+</li>
+<li><p>支持修复（有可能会丢失数据）</p>
+</li>
+<li><p>全文索引（基于分词创建）</p>
+</li>
+<li><p>对BLOB和TEXT等长字段，可以基于前500个字符创建索引</p>
+</li>
+<li><p>延迟更新索引键（DELAY_KEY_WRITE，索引修改写入到内存钟的键缓冲区，键缓冲区加Mutex锁，在清理缓冲区或关闭表时写入磁盘。极大提升了性能，但有可能在异常情况下造成索引损坏）</p>
+</li>
+<li><p>压缩表（只读，支持索引且索引也只读。可以减少磁盘空间占用，减少磁盘IO）</p>
+</li>
+<li><p>空间函数（支持地理空间搜索）</p>
+</li>
+</ul>
+<p><strong>主要缺陷：</strong></p>
+<ul>
+<li><p>不支持事务</p>
+</li>
+<li><p>不支持行级锁（并发写入的性能较低）</p>
+</li>
+<li><p>崩溃后无法安全恢复</p>
+</li>
+</ul>
+
+        <h4 id="Archive（针对插入和压缩做了优化的简单引擎）">
+          <a href="#Archive（针对插入和压缩做了优化的简单引擎）" class="heading-link"><i class="fas fa-link"></i></a><a href="#Archive（针对插入和压缩做了优化的简单引擎）" class="headerlink" title="Archive（针对插入和压缩做了优化的简单引擎）"></a>Archive（针对插入和压缩做了优化的简单引擎）</h4>
+      <p><strong>重要特点：</strong></p>
+<ul>
+<li><p>只支持INSERT和SELECT</p>
+</li>
+<li><p>支持行级锁</p>
+</li>
+<li><p>支持专用的缓冲区</p>
+</li>
+<li><p>缓存所有的写并利用zlib对插入行进行压缩（磁盘I/O比MyISAM更少）</p>
+</li>
+</ul>
+<p><strong>重要特性：</strong></p>
+<ul>
+<li><p>一个查询返回表中存在的所有行数前，阻止其他的SELECT执行（保证一致性读）</p>
+</li>
+<li><p>批量插入完成前对读操作不可见（模仿了事务机制和MVCC）</p>
+</li>
+</ul>
+<p><strong>适用场景：</strong></p>
+<ol>
+<li><p>日志数据采集类应用</p>
+</li>
+<li><p>需要更快INSERT操作</p>
+</li>
+</ol>
+
+        <h4 id="Blackhole（仅可作为特殊的复制架构和日志审核手段）（经常带来问题，不推荐使用）">
+          <a href="#Blackhole（仅可作为特殊的复制架构和日志审核手段）（经常带来问题，不推荐使用）" class="heading-link"><i class="fas fa-link"></i></a><a href="#Blackhole（仅可作为特殊的复制架构和日志审核手段）（经常带来问题，不推荐使用）" class="headerlink" title="Blackhole（仅可作为特殊的复制架构和日志审核手段）（经常带来问题，不推荐使用）"></a>Blackhole（仅可作为特殊的复制架构和日志审核手段）（经常带来问题，不推荐使用）</h4>
+      
+        <h4 id="CSV（作为数据交换的机制）">
+          <a href="#CSV（作为数据交换的机制）" class="heading-link"><i class="fas fa-link"></i></a><a href="#CSV（作为数据交换的机制）" class="headerlink" title="CSV（作为数据交换的机制）"></a>CSV（作为数据交换的机制）</h4>
+      <p><strong>重要特点：</strong></p>
+<ul>
+<li><p>可以将CSV文件作为表（CSV作为表不支持索引）</p>
+</li>
+<li><p>可以在数据库运行时拷入或拷出文件</p>
+</li>
+</ul>
+<p><strong>适用场景：</strong></p>
+<ul>
+<li><p>Excel等电子表格软件中的数据快速存入MySQL</p>
+</li>
+<li><p>外部程序需要立即从表的数据文件中读取CSV格式的数据</p>
+</li>
+</ul>
+
+        <h4 id="Federated（提供跨服务器的灵活性）（经常带来问题，默认禁用）">
+          <a href="#Federated（提供跨服务器的灵活性）（经常带来问题，默认禁用）" class="heading-link"><i class="fas fa-link"></i></a><a href="#Federated（提供跨服务器的灵活性）（经常带来问题，默认禁用）" class="headerlink" title="Federated（提供跨服务器的灵活性）（经常带来问题，默认禁用）"></a>Federated（提供跨服务器的灵活性）（经常带来问题，默认禁用）</h4>
+      <p><strong>设计目的：</strong></p>
+<p>为了和Microsoft SQL Server和Oracle竞争</p>
+<p><strong>重要特点：</strong></p>
+<ul>
+<li><p>其他MySQL服务器的一个代理</p>
+</li>
+<li><p>能够建立远程MySQL连接，将查询传输到远程服务器上执行</p>
+</li>
+</ul>
+
+        <h4 id="Memory（早期叫HEAP，内存数据引擎，超快访问速度）：">
+          <a href="#Memory（早期叫HEAP，内存数据引擎，超快访问速度）：" class="heading-link"><i class="fas fa-link"></i></a><a href="#Memory（早期叫HEAP，内存数据引擎，超快访问速度）：" class="headerlink" title="Memory（早期叫HEAP，内存数据引擎，超快访问速度）："></a>Memory（早期叫HEAP，内存数据引擎，超快访问速度）：</h4>
+      <p><strong>重要特点：</strong></p>
+<ul>
+<li><p>数据都存在内存中（不需要磁盘I/O，查询速度至少比MyISAM快一个数量级）</p>
+</li>
+<li><p>重启后会保留表结构，但数据会丢失</p>
+</li>
+<li><p>支持Hash索引</p>
+</li>
+</ul>
+<p><strong>主要缺陷：</strong></p>
+<ul>
+<li><p>仅支持表级锁（并发写入的性能较低）</p>
+</li>
+<li><p>不支持BLOB或TEXT类型的列</p>
+</li>
+<li><p>每行的长度固定（即使指定VARCHAR，实际存储也会转换成CHAR，可能导致内存浪费）</p>
+</li>
+</ul>
+<p><strong>适用场景：</strong></p>
+<ol>
+<li><p>用于查找或映射表</p>
+</li>
+<li><p>用于缓存周期性聚合数据的结果</p>
+</li>
+<li><p>用于保存数据分析中产生的中间数据</p>
+</li>
+<li><p>MySQL内部使用的临时表（如果MySQL查询中间结果太大超过了Memory表的限制，或包含BLOB或TEXT字段，临时表自动转换为MyISAM）</p>
+</li>
+</ol>
+
+        <h4 id="Merge（用于日志或者数据仓库类应用，被MySQL分区功能完全击败，已放弃）">
+          <a href="#Merge（用于日志或者数据仓库类应用，被MySQL分区功能完全击败，已放弃）" class="heading-link"><i class="fas fa-link"></i></a><a href="#Merge（用于日志或者数据仓库类应用，被MySQL分区功能完全击败，已放弃）" class="headerlink" title="Merge（用于日志或者数据仓库类应用，被MySQL分区功能完全击败，已放弃）"></a>Merge（用于日志或者数据仓库类应用，被MySQL分区功能完全击败，已放弃）</h4>
+      <p><strong>重要特点：</strong></p>
+<ul>
+<li><p>很多特点类同MyISAM（MyISAM的变种）</p>
+</li>
+<li><p>多个MyISAM表合并出来的虚拟表</p>
+</li>
+</ul>
+
+        <h4 id="NDB（集群引擎）">
+          <a href="#NDB（集群引擎）" class="heading-link"><i class="fas fa-link"></i></a><a href="#NDB（集群引擎）" class="headerlink" title="NDB（集群引擎）"></a>NDB（集群引擎）</h4>
+      <p><strong>重要特点：</strong></p>
+<p>多MySQL服务器+NDB集群存储引擎+NDB数据库（保证分布式、share-nothing、容灾及高可用）=MySQL集群</p>
+
+        <h4 id="第三方存储引擎">
+          <a href="#第三方存储引擎" class="heading-link"><i class="fas fa-link"></i></a><a href="#第三方存储引擎" class="headerlink" title="第三方存储引擎"></a>第三方存储引擎</h4>
+      <ul>
+<li><p>OLTP类引擎（XtraDB、PBXT）</p>
+</li>
+<li><p>面向列的引擎（Infobright）</p>
+</li>
+<li><p>社区引擎（Aria、Groonga、OQGraph、Q4M、SphinxSE、Spider、VPForMySQL）</p>
+</li>
+</ul>
+</div></div></article><article class="postlist-item post"><header class="post-header"><h1 class="post-title"><a class="post-title__link" href="/2021/12/01/kafka-deadlock-analysis/">kafka_deadlock_analysis</a></h1><div class="post-meta"><span class="post-meta-item post-meta-item--createtime"><span class="post-meta-item__icon"><i class="far fa-calendar-plus"></i></span><span class="post-meta-item__info">Created</span><span class="post-meta-item__value">2021-12-01</span></span><span class="post-meta-item post-meta-item--updatetime"><span class="post-meta-item__icon"><i class="far fa-calendar-check"></i></span><span class="post-meta-item__info">Updated</span><span class="post-meta-item__value">2021-12-01</span></span></div></header><div class="post-body"><div class="post-excerpt">
         <h2 id="Kafka死锁问题">
           <a href="#Kafka死锁问题" class="heading-link"><i class="fas fa-link"></i></a><a href="#Kafka死锁问题" class="headerlink" title="Kafka死锁问题"></a>Kafka死锁问题</h2>
       
@@ -133,4 +424,4 @@ window.CONFIG = CONFIG;</script><meta name="generator" content="Hexo 5.4.0"></he
 <li><p>自定义设置开始偏移量：/bin/kafka-consumer-groups.sh –bootstrap-server 192.168.130.128:9092 –group offset-father –topic test1 –execute –reset-offsets –to-earliest</p>
 </li>
 </ul>
-</div></div></article></section><nav class="paginator"><div class="paginator-inner"><span class="page-number current">1</span></div></nav></div></div><div class="sidebar-wrap" id="sidebar-wrap"><aside class="sidebar" id="sidebar"><section class="sidebar-toc hide"></section><!-- ov = overview--><section class="sidebar-ov"><div class="sidebar-ov-author"><div class="sidebar-ov-author__avatar"><img class="sidebar-ov-author__avatar_img" src="/images/icons/stun-logo.svg" alt="avatar"></div><p class="sidebar-ov-author__text">Yuyuyyyyyy</p></div><div class="sidebar-ov-state"><a class="sidebar-ov-state-item sidebar-ov-state-item--posts" href="/archives/"><div class="sidebar-ov-state-item__count">2</div><div class="sidebar-ov-state-item__name">Archives</div></a></div><div class="sidebar-ov-cc"><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en" target="_blank" rel="noopener" data-popover="Creative Commons" data-popover-pos="up"><img src="/images/cc-by-nc-sa.svg"></a></div></section></aside></div><div class="clearfix"></div></div></main><footer class="footer" id="footer"><div class="footer-inner"><div><span>Copyright © 2021</span><span class="footer__icon"><i class="fas fa-heart"></i></span><span>Yu Jie</span></div><div><span>Powered by <a href="http://hexo.io/" title="Hexo" target="_blank" rel="noopener">Hexo</a></span><span> v5.4.0</span><span class="footer__devider">|</span><span>Theme - <a href="https://github.com/liuyib/hexo-theme-stun/" title="Stun" target="_blank" rel="noopener">Stun</a></span><span> v2.6.2</span></div></div></footer><div class="loading-bar" id="loading-bar"><div class="loading-bar__progress"></div></div><div class="back2top" id="back2top"><span class="back2top__icon"><i class="fas fa-rocket"></i></span></div></div><script src="https://cdn.jsdelivr.net/npm/jquery@v3.4.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@1.5.2/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@1.5.2/velocity.ui.min.js"></script><script src="/js/utils.js?v=2.6.2"></script><script src="/js/stun-boot.js?v=2.6.2"></script><script src="/js/scroll.js?v=2.6.2"></script><script src="/js/header.js?v=2.6.2"></script><script src="/js/sidebar.js?v=2.6.2"></script></body></html>
+</div></div></article></section><nav class="paginator"><div class="paginator-inner"><span class="page-number current">1</span></div></nav></div></div><div class="sidebar-wrap" id="sidebar-wrap"><aside class="sidebar" id="sidebar"><section class="sidebar-toc hide"></section><!-- ov = overview--><section class="sidebar-ov"><div class="sidebar-ov-author"><div class="sidebar-ov-author__avatar"><img class="sidebar-ov-author__avatar_img" src="/images/icons/stun-logo.svg" alt="avatar"></div><p class="sidebar-ov-author__text">Yuyuyyyyyy</p></div><div class="sidebar-ov-state"><a class="sidebar-ov-state-item sidebar-ov-state-item--posts" href="/archives/"><div class="sidebar-ov-state-item__count">4</div><div class="sidebar-ov-state-item__name">Archives</div></a></div><div class="sidebar-ov-cc"><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en" target="_blank" rel="noopener" data-popover="Creative Commons" data-popover-pos="up"><img src="/images/cc-by-nc-sa.svg"></a></div></section></aside></div><div class="clearfix"></div></div></main><footer class="footer" id="footer"><div class="footer-inner"><div><span>Copyright © 2021</span><span class="footer__icon"><i class="fas fa-heart"></i></span><span>Yu Jie</span></div><div><span>Powered by <a href="http://hexo.io/" title="Hexo" target="_blank" rel="noopener">Hexo</a></span><span> v5.4.0</span><span class="footer__devider">|</span><span>Theme - <a href="https://github.com/liuyib/hexo-theme-stun/" title="Stun" target="_blank" rel="noopener">Stun</a></span><span> v2.6.2</span></div></div></footer><div class="loading-bar" id="loading-bar"><div class="loading-bar__progress"></div></div><div class="back2top" id="back2top"><span class="back2top__icon"><i class="fas fa-rocket"></i></span></div></div><script src="https://cdn.jsdelivr.net/npm/jquery@v3.4.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@1.5.2/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@1.5.2/velocity.ui.min.js"></script><script src="/js/utils.js?v=2.6.2"></script><script src="/js/stun-boot.js?v=2.6.2"></script><script src="/js/scroll.js?v=2.6.2"></script><script src="/js/header.js?v=2.6.2"></script><script src="/js/sidebar.js?v=2.6.2"></script></body></html>
