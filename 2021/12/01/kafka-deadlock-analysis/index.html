@@ -1,13 +1,13 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="format-detection" content="telephone=no"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black"><link rel="icon" href="/images/icons/favicon-16x16.png?v=2.6.2" type="image/png" sizes="16x16"><link rel="icon" href="/images/icons/favicon-32x32.png?v=2.6.2" type="image/png" sizes="32x32"><meta name="description" content="Kafka死锁问题                           问题现象       以数据服务团队的CUPS系统为例，upkafka-1.0版本出现的问题主要会产生如下异常现象：  文件句柄增多（能够达到40w+） CLOSE_WAIT增多（数量同样非常巨大） 单节点hang住，该节点为leader的分区，其他节点无法同步消息（从ISR中掉队），再">
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="format-detection" content="telephone=no"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="black"><link rel="icon" href="/images/icons/favicon-16x16.png?v=2.6.2" type="image/png" sizes="16x16"><link rel="icon" href="/images/icons/favicon-32x32.png?v=2.6.2" type="image/png" sizes="32x32"><meta name="description" content="Kafka死锁问题                           问题现象       kafka_0.11.0.0版本出现的问题主要会产生如下异常现象：  文件句柄增多（能够达到40w+） CLOSE_WAIT增多（数量同样非常巨大） 单节点hang住，该节点为leader的分区，其他节点无法同步消息（从ISR中掉队），再加上外部客户端无法连上该节点，导致分区不可用，">
 <meta property="og:type" content="article">
 <meta property="og:title" content="kafka_deadlock_analysis">
 <meta property="og:url" content="http://example.com/2021/12/01/kafka-deadlock-analysis/index.html">
 <meta property="og:site_name" content="Coding Heart">
-<meta property="og:description" content="Kafka死锁问题                           问题现象       以数据服务团队的CUPS系统为例，upkafka-1.0版本出现的问题主要会产生如下异常现象：  文件句柄增多（能够达到40w+） CLOSE_WAIT增多（数量同样非常巨大） 单节点hang住，该节点为leader的分区，其他节点无法同步消息（从ISR中掉队），再">
+<meta property="og:description" content="Kafka死锁问题                           问题现象       kafka_0.11.0.0版本出现的问题主要会产生如下异常现象：  文件句柄增多（能够达到40w+） CLOSE_WAIT增多（数量同样非常巨大） 单节点hang住，该节点为leader的分区，其他节点无法同步消息（从ISR中掉队），再加上外部客户端无法连上该节点，导致分区不可用，">
 <meta property="og:locale" content="en_US">
 <meta property="og:image" content="http://example.com/2021/12/01/kafka-deadlock-analysis/kafka_deadlock_analysis.jpg">
 <meta property="article:published_time" content="2021-12-01T13:47:51.000Z">
-<meta property="article:modified_time" content="2021-12-01T14:30:56.462Z">
+<meta property="article:modified_time" content="2021-12-01T14:58:38.388Z">
 <meta property="article:author" content="Yu Jie">
 <meta property="article:tag" content="Kafka">
 <meta name="twitter:card" content="summary">
@@ -41,13 +41,15 @@ window.CONFIG = CONFIG;</script><meta name="generator" content="Hexo 5.4.0"></he
       
         <h3 id="问题现象">
           <a href="#问题现象" class="heading-link"><i class="fas fa-link"></i></a><a href="#问题现象" class="headerlink" title="问题现象"></a>问题现象</h3>
-      <p>以数据服务团队的CUPS系统为例，upkafka-1.0版本出现的问题主要会产生如下异常现象：</p>
+      <p>kafka_0.11.0.0版本出现的问题主要会产生如下异常现象：</p>
 <ol>
 <li>文件句柄增多（能够达到40w+）</li>
 <li>CLOSE_WAIT增多（数量同样非常巨大）</li>
 <li>单节点hang住，该节点为leader的分区，其他节点无法同步消息（从ISR中掉队），再加上外部客户端无法连上该节点，导致分区不可用，高可用失效</li>
 <li>jstack抓到死锁信息，循环等待的monitor都是a kafka.coordinator.group.GroupMetadata，wait的位置都是DelayedProduce中的方法</li>
 </ol>
+ <span id="more"></span> 
+
 
         <h3 id="问题梳理">
           <a href="#问题梳理" class="heading-link"><i class="fas fa-link"></i></a><a href="#问题梳理" class="headerlink" title="问题梳理"></a>问题梳理</h3>
@@ -100,7 +102,7 @@ window.CONFIG = CONFIG;</script><meta name="generator" content="Hexo 5.4.0"></he
           修复方式</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%BE%AA%E7%8E%AF%E7%AD%89%E5%BE%85%E6%B6%88%E9%99%A4"><span class="toc-number">1.3.1.</span> <span class="toc-text">
           循环等待消除</span></a></li></ol></li></ol></li></ol></section><!-- ov = overview--><section class="sidebar-ov hide"><div class="sidebar-ov-author"><div class="sidebar-ov-author__avatar"><img class="sidebar-ov-author__avatar_img" src="/images/icons/stun-logo.svg" alt="avatar"></div><p class="sidebar-ov-author__text">Yuyuyyyyyy</p></div><div class="sidebar-ov-state"><a class="sidebar-ov-state-item sidebar-ov-state-item--posts" href="/archives/"><div class="sidebar-ov-state-item__count">4</div><div class="sidebar-ov-state-item__name">Archives</div></a><a class="sidebar-ov-state-item sidebar-ov-state-item--categories" href="/categories/"><div class="sidebar-ov-state-item__count">1</div><div class="sidebar-ov-state-item__name">Categories</div></a><a class="sidebar-ov-state-item sidebar-ov-state-item--tags" href="/tags/"><div class="sidebar-ov-state-item__count">2</div><div class="sidebar-ov-state-item__name">Tags</div></a></div><div class="sidebar-ov-cc"><a href="https://creativecommons.org/licenses/by-nc-sa/4.0/deed.en" target="_blank" rel="noopener" data-popover="Creative Commons" data-popover-pos="up"><img src="/images/cc-by-nc-sa.svg"></a></div></section><div class="sidebar-reading"><div class="sidebar-reading-info"><span class="sidebar-reading-info__text">You have read </span><span class="sidebar-reading-info__num">0</span><span class="sidebar-reading-info__perc">%</span></div><div class="sidebar-reading-line"></div></div></aside></div><div class="clearfix"></div></div></main><footer class="footer" id="footer"><div class="footer-inner"><div><span>Copyright © 2021</span><span class="footer__icon"><i class="fas fa-heart"></i></span><span>Yu Jie</span></div><div><span>Powered by <a href="http://hexo.io/" title="Hexo" target="_blank" rel="noopener">Hexo</a></span><span> v5.4.0</span><span class="footer__devider">|</span><span>Theme - <a href="https://github.com/liuyib/hexo-theme-stun/" title="Stun" target="_blank" rel="noopener">Stun</a></span><span> v2.6.2</span></div></div></footer><div class="loading-bar" id="loading-bar"><div class="loading-bar__progress"></div></div><div class="back2top" id="back2top"><span class="back2top__icon"><i class="fas fa-rocket"></i></span></div></div><div class="search-mask"></div><div class="search-popup"><span class="search-close"></span><div class="search-input"><input placeholder="Search for Posts (Support multiple keywords)"></div><div class="search-results"></div></div><script src="https://cdn.jsdelivr.net/npm/jquery@v3.4.1/dist/jquery.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@1.5.2/velocity.min.js"></script><script src="https://cdn.jsdelivr.net/npm/velocity-animate@1.5.2/velocity.ui.min.js"></script><script>function initSearch() {
   var isXML = true;
-  var search_path = 'search.xml';
+  var search_path = 'search.json';
 
   if (!search_path) {
     search_path = 'search.xml';
@@ -371,4 +373,4 @@ if (Array.isArray(assistSearchList)) {
       extSearch(name);
     }, false);
   });
-}</script><script src="/js/utils.js?v=2.6.2"></script><script src="/js/stun-boot.js?v=2.6.2"></script><script src="/js/scroll.js?v=2.6.2"></script><script src="/js/header.js?v=2.6.2"></script><script src="/js/sidebar.js?v=2.6.2"></script><script type="application/json" src="/search.xml"></script></body></html>
+}</script><script src="/js/utils.js?v=2.6.2"></script><script src="/js/stun-boot.js?v=2.6.2"></script><script src="/js/scroll.js?v=2.6.2"></script><script src="/js/header.js?v=2.6.2"></script><script src="/js/sidebar.js?v=2.6.2"></script><script type="application/json" src="/search.json"></script></body></html>
